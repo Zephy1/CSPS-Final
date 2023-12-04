@@ -23,3 +23,4 @@ plt.axhline(y=0, color="black", linewidth=1)
 
 # Display the sine wave plot
 plt.show()
+print("1")
