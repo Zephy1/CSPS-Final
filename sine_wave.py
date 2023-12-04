@@ -12,3 +12,4 @@ def plot_sine_wave(frequency, duration, sampling_rate):
     plt.show()
 
 plot_sine_wave(870, 1, 44100)
+print("6")
