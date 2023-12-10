@@ -32,8 +32,14 @@ class AudioAnalyzerApp:
         self.status_label.pack()
 
         self.filename = None
+        self.audio_data = None
+        self.sample_rate = 0
+
         self.waveform_plot = None
         self.freq_plot = None
+        self.spec_plot = None
+        self.combined_plot = None
+
         self.current_freq_plot = 0
         # self.file_processed = False
 
@@ -53,29 +59,32 @@ class AudioAnalyzerApp:
                 self.filename = converted_filename
 
             # Load the .wav file
-            sample_rate, audio_data = wavfile.read(self.filename)
+            self.sample_rate, self.audio_data = wavfile.read(self.filename)
 
             # Check for meta tags and remove them
             # (Note: This is a placeholder, you may need a more specific implementation based on your requirements)
-            audio_data = self.remove_meta_tags(audio_data)
+            self.audio_data = self.remove_meta_tags(self.audio_data)
+
+            # Normalize audio data to the range [-1, 1]
+            self.audio_data = self.audio_data / np.max(np.abs(self.audio_data), axis=0)
 
             # Display the title value in seconds
-            duration = librosa.get_duration(y=audio_data, sr=sample_rate)
+            duration = librosa.get_duration(y=self.audio_data, sr=self.sample_rate)
             self.status_label.config(text=f"Duration: {duration:.2f} seconds")
 
             # Display the waveform
-            self.display_waveform(audio_data, sample_rate)
+            self.display_waveform(self.audio_data, self.sample_rate)
 
             # Compute and display the resonance frequencies
-            resonance_freq = self.compute_resonance_frequency(audio_data, sample_rate)
+            resonance_freq = self.compute_resonance_frequency(self.audio_data, self.sample_rate)
             self.status_label.config(text=f"Resonance Frequency: {resonance_freq:.2f} Hz")
 
             # Compute and display RT60 for low, mid, and high frequencies
-            rt60_low, rt60_mid, rt60_high = self.compute_rt60(audio_data, sample_rate)
-            self.status_label.config(text=f"RT60 Low: {rt60_low:.2f} s, RT60 Mid: {rt60_mid:.2f} s, RT60 High: {rt60_high:.2f} s")
+            _, rt60_low, rt60_mid, rt60_high = self.compute_rt60(self.audio_data, self.sample_rate)
+            self.status_label.config(
+                text=f"RT60 Low: {rt60_low:.2f} s, RT60 Mid: {rt60_mid:.2f} s, RT60 High: {rt60_high:.2f} s")
 
             self.freq_plot = None  # Reset freq_plot
-            # self.file_processed = True
 
     def convert_to_wav(self):
         # Convert to .wav format using pydub
@@ -102,12 +111,43 @@ class AudioAnalyzerApp:
         plt.show()
 
     def compute_resonance_frequency(self, audio_data, sample_rate):
-        # Placeholder for computing resonance frequency, modify as needed
-        return np.random.uniform(50, 200)
+        # Compute FFT
+        fft_result = np.fft.fft(audio_data)
+
+        # Get the corresponding frequencies
+        frequencies = np.fft.fftfreq(len(fft_result), 1 / sample_rate)
+
+        # Find the index of the maximum amplitude
+        peak_index = np.argmax(np.abs(fft_result))
+
+        # Convert index to frequency
+        resonance_freq = np.abs(frequencies[peak_index])
+
+        return resonance_freq
 
     def compute_rt60(self, audio_data, sample_rate):
-        # Placeholder for computing RT60 for low, mid, and high frequencies, modify as needed
-        return np.random.uniform(0.1, 0.5), np.random.uniform(0.5, 1.0), np.random.uniform(1.0, 2.0)
+        # Compute the short-time Fourier transform (STFT)
+        Zxx = np.abs(librosa.stft(audio_data, hop_length=512, n_fft=1024))
+
+        # Define frequency bands (you may adjust these as needed)
+        low_band = (20, 200)  # Low frequencies
+        mid_band = (200, 2000)  # Mid frequencies
+        high_band = (2000, 8000)  # High frequencies
+
+        # Compute the energy in each frequency band
+        energy_low = np.sum(
+            np.abs(Zxx[(librosa.time_to_frames(2), librosa.time_to_frames(4))]))  # Adjust time frames as needed
+        energy_mid = np.sum(
+            np.abs(Zxx[(librosa.time_to_frames(2), librosa.time_to_frames(4))]))  # Adjust time frames as needed
+        energy_high = np.sum(
+            np.abs(Zxx[(librosa.time_to_frames(2), librosa.time_to_frames(4))]))  # Adjust time frames as needed
+
+        # Compute RT60 using the energy in each band
+        rt60_low = -60 / np.mean(20 * np.log10(energy_low / np.max(energy_low)))
+        rt60_mid = -60 / np.mean(20 * np.log10(energy_mid / np.max(energy_mid)))
+        rt60_high = -60 / np.mean(20 * np.log10(energy_high / np.max(energy_high)))
+
+        return Zxx, rt60_low, rt60_mid, rt60_high
 
     def toggle_freq_plot(self):
         self.current_freq_plot = (self.current_freq_plot + 1) % 3
@@ -119,46 +159,69 @@ class AudioAnalyzerApp:
         #     self.status_label.config(text="Please process the file first.")
 
     def display_freq_plot(self):
-        if self.waveform_plot:
-            freq_range = ["Low", "Mid", "High"]
-            freq_label = freq_range[self.current_freq_plot]
+        # if self.file_processed:
+        freq_range = ["Low", "Mid", "High"]
+        freq_label = freq_range[self.current_freq_plot]
 
-            # Placeholder for displaying frequency plot
-            # You should replace this with your actual frequency analysis code
-            freq_data = np.random.rand(100)  # Replace with your frequency data
-            freq_axis = np.linspace(0, 1, len(freq_data))
+        # Compute STFT using librosa
+        Zxx, rt60_low, rt60_mid, rt60_high = self.compute_rt60(self.audio_data, len(self.audio_data))
 
-            if self.freq_plot:
-                self.freq_plot.clear()
-            else:
-                plt.figure()
-                self.freq_plot = plt.subplot(111)
+        make_new_plot = False
+        if self.freq_plot:
+            self.freq_plot.clear()
+        else:
+            make_new_plot = True
+            plt.figure()
+            self.freq_plot = plt.subplot(211)
 
-            self.freq_plot.plot(freq_axis, freq_data)
-            self.freq_plot.set_xlabel('Frequency')
-            self.freq_plot.set_ylabel('Amplitude')
-            self.freq_plot.set_title(f'{freq_label} Frequency Plot')
-            plt.show()
+            # Display spectrogram
+            librosa.display.specshow(librosa.amplitude_to_db(Zxx, ref=np.max), y_axis='log', x_axis='time')
+            plt.colorbar(format='%+2.0f dB')
+            plt.title('Spectrogram of Waveform')
+
+        # Display frequency plot
+        if make_new_plot:
+            self.freq_plot = plt.subplot(212)
+            freq_data = np.mean(Zxx, axis=1)  # Extract mean amplitude along the time axis
+            freq_axis = librosa.fft_frequencies(sr=len(self.audio_data), n_fft=1024)
+            plt.plot(freq_axis, freq_data, label=f'{freq_label} Frequency Plot')
+            plt.xlabel('Frequency (Hz)')
+            plt.ylabel('Amplitude')
+            plt.title(f'{freq_label} Frequency Plot')
+
+        # Display RT60 values
+        # plt.axvline(rt60_low, color='r', linestyle='--', label=f'RT60 Low: {rt60_low:.2f} s')
+        # plt.axvline(rt60_mid, color='g', linestyle='--', label=f'RT60 Mid: {rt60_mid:.2f} s')
+        # plt.axvline(rt60_high, color='b', linestyle='--', label=f'RT60 High: {rt60_high:.2f} s')
+
+        plt.legend()
+        plt.tight_layout()
+        plt.show()
+        # else:
+        #     self.status_label.config(text="Please load and process the file first.")
 
     def combine_plots(self):
         if self.waveform_plot and self.freq_plot:
             # Placeholder for combining plots
             # You should replace this with your actual combination code
-            plt.figure()
-            combined_plot = plt.subplot(111)
+            if self.combined_plot:
+                self.combined_plot.clear()
+            else:
+                plt.figure()
+                self.combined_plot = plt.subplot(111)
 
             # Plot waveform
-            combined_plot.plot(self.waveform_plot.get_lines()[0].get_xdata(), self.waveform_plot.get_lines()[0].get_ydata(), label='Waveform')
+            self.combined_plot.plot(self.waveform_plot.get_lines()[0].get_xdata(), self.waveform_plot.get_lines()[0].get_ydata(), label='Waveform')
 
             # Plot frequency data
             freq_data = np.random.rand(100)  # Replace with your frequency data
             freq_axis = np.linspace(0, 1, len(freq_data))
-            combined_plot.plot(freq_axis, freq_data, label='Frequency Plot')
+            self.combined_plot.plot(freq_axis, freq_data, label='Frequency Plot')
 
-            combined_plot.set_xlabel('Time/Frequency')
-            combined_plot.set_ylabel('Amplitude')
-            combined_plot.set_title('Combined Plot')
-            combined_plot.legend()
+            self.combined_plot.set_xlabel('Time/Frequency')
+            self.combined_plot.set_ylabel('Amplitude')
+            self.combined_plot.set_title('Combined Plot')
+            self.combined_plot.legend()
             plt.show()
         else:
             self.status_label.config(text="Please process the file first.")
