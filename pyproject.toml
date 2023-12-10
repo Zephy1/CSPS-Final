@@ -1,0 +1,23 @@
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "audiograph"
+version = "1.2.0"
+authors = [
+  { name="Bassil Ghareeb", email="bghareeb1674@floridapoly.edu" }, { name="Arselle Conteh", email="aconteh3672@floridapoly.edu",, { name="Jeremy Goff", email="jgoff3563@floridapoly.edu",
+]
+description = "Analyze and visualize audio files"
+readme = "README.txt"
+requires-python = ">=3.8"
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+]
+
+[project.urls]
+Homepage = "https://github.com/Zephy1/CSPS-Final"
+Issues = "https://github.com/Zephy1/CSPS-Final/issues"
+Changelog = "https://github.com/Zephy1/CSPS-Final/blob/master/Changelog.md"
