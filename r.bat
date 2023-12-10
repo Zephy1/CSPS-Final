@@ -1,1 +1,2 @@
 python -m r
+pause
