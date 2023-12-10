@@ -311,6 +311,102 @@ class AudioAnalyzerApp:
     #     else:
     #         self.status_label.config(text="Please process the file first.")
 
+    # def plot_waveform(self):
+    #     plt.figure(figsize=(10, 4))
+    #     time = np.arange(0, len(self.audio_data)) / self.sample_rate
+    #     plt.plot(time, self.audio_data)
+    #     plt.title('Waveform')
+    #     plt.xlabel('Time (s)')
+    #     plt.ylabel('Amplitude')
+    #     plt.tight_layout()
+    #     plt.savefig("waveform.png")
+    #
+    #     # Display the waveform plot
+    #     self.plot_image("waveform.png")
+    #
+    # def compute_resonance_frequency(self):
+    #     # Your resonance frequency computation logic here
+    #     # This is just a placeholder, replace with your actual implementation
+    #     return np.random.uniform(50, 1000)
+    #
+    # def plot_image(self, image_path):
+    #     img = tk.PhotoImage(file=image_path)
+    #     panel = tk.Label(self.plot_frame, image=img)
+    #     panel.image = img
+    #     panel.pack()
+    #
+    # def plot_decibel_vs_frequency(self):
+    #     plt.figure(figsize=(10, 4))
+    #     D = librosa.amplitude_to_db(np.abs(librosa.stft(self.audio_data)), ref=np.max)
+    #     librosa.display.specshow(D, sr=44100, x_axis='time', y_axis='log')
+    #     plt.colorbar(format='%+2.0f dB')
+    #     plt.title('Spectrogram')
+    #     plt.xlabel('Time (s)')
+    #     plt.ylabel('Frequency (Hz)')
+    #     plt.tight_layout()
+    #     plt.savefig("decibel_vs_frequency.png")
+    #
+    #     # Display the decibel vs frequency plot
+    #     self.plot_image("decibel_vs_frequency.png")
+    #
+    # def plot_line_chart(self):
+    #     # Compute the frequency content and mean decibels
+    #     frequencies, mean_decibels = self.compute_frequency_content()
+    #
+    #     # Plot Line Chart
+    #     plt.figure(figsize=(10, 4))
+    #     plt.plot(frequencies, mean_decibels)
+    #     plt.title('Decibels vs Frequency')
+    #     plt.xlabel('Frequency (Hz)')
+    #     plt.ylabel('Mean Decibels')
+    #     plt.tight_layout()
+    #     plt.savefig("line_chart.png")
+    #
+    #     # Display the line chart plot
+    #     self.plot_image("line_chart.png")
+    #
+    # def compute_frequency_content(self):
+    #     # Compute the frequency content and mean decibels
+    #     D = librosa.amplitude_to_db(np.abs(librosa.stft(self.audio_data)), ref=np.max)
+    #     frequencies = librosa.core.fft_frequencies(sr=44100)
+    #     mean_decibels = np.mean(D, axis=1)
+    #     return frequencies, mean_decibels
+    #
+    # def plot_frequency_ranges(self):
+    #     # Compute the frequency content and mean decibels
+    #     frequencies, mean_decibels = self.compute_frequency_content()
+    #
+    #     # Define frequency ranges
+    #     low_freq_range = (0, 1000)
+    #     mid_freq_range = (1000, 5000)
+    #     high_freq_range = (5000, 20000)
+    #
+    #     # Filter frequencies and decibels for each range
+    #     low_freq_indices = np.where((frequencies >= low_freq_range[0]) & (frequencies < low_freq_range[1]))[0]
+    #     mid_freq_indices = np.where((frequencies >= mid_freq_range[0]) & (frequencies < mid_freq_range[1]))[0]
+    #     high_freq_indices = np.where((frequencies >= high_freq_range[0]) & (frequencies < high_freq_range[1]))[0]
+    #
+    #     low_freq_values = mean_decibels[low_freq_indices]
+    #     mid_freq_values = mean_decibels[mid_freq_indices]
+    #     high_freq_values = mean_decibels[high_freq_indices]
+    #
+    #     # Plot Line Chart for Frequency Ranges
+    #     plt.figure(figsize=(10, 4))
+    #
+    #     plt.plot(frequencies[low_freq_indices], low_freq_values, label='Low Frequencies')
+    #     plt.plot(frequencies[mid_freq_indices], mid_freq_values, label='Mid Frequencies')
+    #     plt.plot(frequencies[high_freq_indices], high_freq_values, label='High Frequencies')
+    #
+    #     plt.title('Decibels vs Frequency Ranges')
+    #     plt.xlabel('Frequency (Hz)')
+    #     plt.ylabel('Mean Decibels')
+    #     plt.legend()
+    #     plt.tight_layout()
+    #     plt.savefig("frequency_ranges_chart.png")
+    #
+    #     # Display the line chart for frequency ranges
+    #     self.plot_image("frequency_ranges_chart.png")
+
 if __name__ == "__main__":
     root = tk.Tk()
     app = AudioAnalyzerApp(root)
